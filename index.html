@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduBot</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0f1117;
+  --sidebar: #161822;
+  --surface: #1a1d27;
+  --surface2: #222536;
+  --border: #2e3248;
+  --accent: #6c63ff;
+  --accent2: #a78bfa;
+  --text: #e8eaf6;
+  --text-muted: #7c82a8;
+  --user-bg: #6c63ff;
+  --error-bg: #2d1a1a;
+  --error-text: #f87171;
+  --success: #34d399;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 260px;
+  min-width: 260px;
+  height: 100vh;
+  background: var(--sidebar);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebar-header {
+  padding: 18px 16px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.sidebar-logo .logo-icon {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.sidebar-logo span {
+  font-family: 'DM Serif Display', serif;
+  font-size: 18px;
+  color: var(--text);
+}
+
+.new-chat-btn {
+  width: 100%;
+  background: rgba(108,99,255,0.15);
+  border: 1px solid rgba(108,99,255,0.3);
+  color: var(--accent2);
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.new-chat-btn:hover {
+  background: rgba(108,99,255,0.25);
+  border-color: var(--accent);
+}
+
+.sidebar-section-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 14px 16px 6px;
+}
+
+.session-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 8px;
+}
+
+.session-list::-webkit-scrollbar { width: 3px; }
+.session-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+.session-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s;
+  position: relative;
+  group: true;
+}
+
+.session-item:hover { background: var(--surface2); }
+.session-item.active { background: var(--surface2); border: 1px solid var(--border); }
+
+.session-icon {
+  width: 28px;
+  height: 28px;
+  background: var(--surface2);
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.session-item.active .session-icon {
+  background: rgba(108,99,255,0.2);
+}
+
+.session-info { flex: 1; overflow: hidden; }
+
+.session-title {
+  font-size: 13px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 400;
+}
+
+.session-time {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.session-delete {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 3px 5px;
+  border-radius: 5px;
+  opacity: 0;
+  transition: all 0.15s;
+}
+
+.session-item:hover .session-delete { opacity: 1; }
+.session-delete:hover { color: #f87171; background: rgba(248,113,113,0.1); }
+
+.sidebar-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+}
+
+.clear-all-btn {
+  width: 100%;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 9px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: 'DM Sans', sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  transition: all 0.2s;
+}
+
+.clear-all-btn:hover {
+  border-color: #f87171;
+  color: #f87171;
+  background: rgba(248,113,113,0.07);
+}
+
+/* ── MAIN CHAT ── */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 70% 20%, rgba(108,99,255,0.07) 0%, transparent 55%),
+    radial-gradient(ellipse at 90% 80%, rgba(167,139,250,0.05) 0%, transparent 55%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.main { position: relative; z-index: 1; }
+
+.top-bar {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(15,17,23,0.8);
+  backdrop-filter: blur(10px);
+}
+
+.top-bar-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 500px;
+}
+
+.status-dot {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--success);
+  flex-shrink: 0;
+}
+
+.dot {
+  width: 7px; height: 7px;
+  background: var(--success);
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%,100% { opacity:1; transform:scale(1); }
+  50% { opacity:0.4; transform:scale(0.8); }
+}
+
+/* Chat box */
+#chat-box {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 32px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  scroll-behavior: smooth;
+}
+
+#chat-box::-webkit-scrollbar { width: 4px; }
+#chat-box::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+.welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  text-align: center;
+  padding: 60px 20px;
+  gap: 14px;
+  animation: fadeUp 0.5s ease;
+}
+
+.welcome-icon { font-size: 50px; filter: drop-shadow(0 4px 12px rgba(108,99,255,0.4)); }
+.welcome h2 { font-family: 'DM Serif Display', serif; font-size: 24px; font-weight: 400; }
+.welcome p { font-size: 14px; color: var(--text-muted); max-width: 360px; line-height: 1.7; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 8px; }
+.chip {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'DM Sans', sans-serif;
+}
+.chip:hover { border-color: var(--accent); color: var(--accent2); background: rgba(108,99,255,0.1); }
+
+/* Messages */
+.msg-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  animation: fadeUp 0.3s ease;
+}
+.msg-row.user { flex-direction: row-reverse; }
+
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(10px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+.avatar {
+  width: 34px; height: 34px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; flex-shrink: 0;
+}
+.avatar.bot-av { background: linear-gradient(135deg, var(--accent), var(--accent2)); }
+.avatar.user-av { background: var(--surface2); border: 1px solid var(--border); font-size: 12px; font-weight: 600; color: var(--accent2); }
+
+.msg-content { max-width: 76%; display: flex; flex-direction: column; gap: 5px; }
+.msg-row.user .msg-content { align-items: flex-end; }
+
+.bubble { padding: 13px 17px; border-radius: 16px; font-size: 14px; line-height: 1.75; word-wrap: break-word; }
+.user-bubble { background: var(--user-bg); color: white; border-bottom-right-radius: 4px; box-shadow: 0 3px 12px rgba(108,99,255,0.25); }
+.bot-bubble { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+.error-bubble { background: var(--error-bg); color: var(--error-text); border: 1px solid rgba(248,113,113,0.2); border-bottom-left-radius: 4px; }
+
+/* Formatted output */
+.bot-bubble .section-title { font-size: 12px; font-weight: 600; color: var(--accent2); text-transform: uppercase; letter-spacing: 0.8px; margin: 12px 0 7px; display: block; }
+.bot-bubble .section-title:first-child { margin-top: 0; }
+.bot-bubble .def-box { background: rgba(108,99,255,0.1); border-left: 3px solid var(--accent); padding: 9px 13px; border-radius: 0 8px 8px 0; margin: 8px 0; font-size: 13.5px; line-height: 1.6; }
+.bot-bubble ol { padding-left:0; list-style:none; counter-reset:steps; margin: 6px 0; }
+.bot-bubble ol li { counter-increment:steps; display:flex; gap:10px; align-items:flex-start; margin-bottom:8px; font-size:14px; line-height:1.65; }
+.bot-bubble ol li::before { content:counter(steps); min-width:22px; height:22px; background:rgba(108,99,255,0.2); color:var(--accent2); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600; flex-shrink:0; margin-top:2px; }
+.bot-bubble ul { list-style:none; padding-left:0; margin:6px 0; }
+.bot-bubble ul li { display:flex; gap:10px; align-items:flex-start; margin-bottom:7px; font-size:14px; line-height:1.65; }
+.bot-bubble ul li::before { content:'•'; color:var(--accent2); font-size:18px; line-height:1.3; flex-shrink:0; }
+.bot-bubble strong { color: var(--accent2); font-weight: 600; }
+.bot-bubble code { background: rgba(108,99,255,0.15); color: var(--accent2); padding: 2px 6px; border-radius: 5px; font-size: 13px; font-family: monospace; }
+.bot-bubble .summary-box { background: rgba(52,211,153,0.08); border: 1px solid rgba(52,211,153,0.2); border-radius: 10px; padding: 10px 14px; margin-top: 12px; font-size: 13px; color: #6ee7b7; line-height: 1.65; }
+.bot-bubble p { margin-bottom: 8px; font-size: 14px; }
+.bot-bubble p:last-child { margin-bottom: 0; }
+
+.ts { font-size: 11px; color: var(--text-muted); padding: 0 4px; }
+
+/* Typing */
+.typing-row { display:flex; gap:12px; align-items:center; animation: fadeUp 0.3s ease; }
+.typing-bubble { background:var(--surface); border:1px solid var(--border); border-radius:16px; border-bottom-left-radius:4px; padding:13px 17px; display:flex; gap:5px; align-items:center; }
+.typing-bubble span { width:7px; height:7px; background:var(--text-muted); border-radius:50%; animation:bounce 1.3s infinite; }
+.typing-bubble span:nth-child(2) { animation-delay:0.18s; }
+.typing-bubble span:nth-child(3) { animation-delay:0.36s; }
+@keyframes bounce { 0%,60%,100%{transform:translateY(0);opacity:0.5;} 30%{transform:translateY(-6px);opacity:1;} }
+
+/* Input */
+.input-wrap { padding: 14px 32px 20px; border-top: 1px solid var(--border); background: rgba(15,17,23,0.9); backdrop-filter: blur(10px); }
+.input-row { display:flex; gap:10px; align-items:center; background:var(--surface2); border:1px solid var(--border); border-radius:14px; padding:6px 6px 6px 18px; transition:border-color 0.2s; }
+.input-row:focus-within { border-color: var(--accent); }
+#user-input { flex:1; background:transparent; border:none; outline:none; color:var(--text); font-size:14px; font-family:'DM Sans',sans-serif; padding:8px 0; }
+#user-input::placeholder { color: var(--text-muted); }
+#send-btn { background:linear-gradient(135deg,var(--accent),var(--accent2)); border:none; color:white; width:40px; height:40px; border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:17px; transition:all 0.2s; flex-shrink:0; }
+#send-btn:hover { transform:scale(1.06); }
+#send-btn:disabled { opacity:0.45; transform:none; cursor:not-allowed; }
+.hint { text-align:center; font-size:11px; color:var(--text-muted); margin-top:9px; }
+
+.empty-sidebar { text-align:center; padding: 30px 16px; color: var(--text-muted); font-size: 13px; line-height: 1.7; }
+.empty-sidebar span { font-size: 28px; display: block; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🎓</div>
+      <span>EduBot</span>
+    </div>
+    <button class="new-chat-btn" onclick="newChat()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New Chat
+    </button>
+  </div>
+
+  <div class="sidebar-section-label">Recent Chats</div>
+
+  <div class="session-list" id="session-list">
+    <div class="empty-sidebar"><span>💬</span>No chats yet.<br>Start a new conversation!</div>
+  </div>
+
+  <div class="sidebar-footer">
+    <button class="clear-all-btn" onclick="clearAll()">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+      Clear All History
+    </button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="top-bar">
+    <div class="top-bar-title" id="top-title">New Chat</div>
+    <div class="status-dot"><div class="dot"></div>Online</div>
+  </div>
+
+  <div id="chat-box">
+    <div class="welcome" id="welcome">
+      <div class="welcome-icon">🎓</div>
+      <h2>Welcome to EduBot</h2>
+      <p>Your smart education assistant. Ask me anything about academics.</p>
+      <div class="chips">
+        <span class="chip" onclick="ask('What is photosynthesis?')">What is photosynthesis?</span>
+        <span class="chip" onclick="ask('Explain the Pythagorean theorem')">Pythagorean theorem</span>
+        <span class="chip" onclick="ask('What caused World War 2?')">World War 2</span>
+        <span class="chip" onclick="ask('How does the water cycle work?')">Water cycle</span>
+<div class="hint">This chatbot is only about Education &nbsp;|&nbsp; Created by Balu</div>
+  </div>
+</div>
+
+<script>  </div>
+
+  <div class="input-wrap">
+    <div class="input-row">
+      <input type="text" id="user-input" placeholder="Ask an education question..." onkeydown="if(event.key==='Enter')sendMessage()" />
+      <button id="send-btn" onclick="sendMessage()">➤</button>
+    </div>
+    <div class="hint">This chatbot is only about Education &nbsp;|&nbsp; Created by Balu</div>
+</div>
+
+<script>
+// ── State ──
+let currentSessionId = 'session_' + Date.now()
+let sessions = {}   // sessionId -> { title, time, messages[] }
+let allHistory = []
+
+// ── Format output ──
+function formatOutput(text) {
+  text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+  text = text.replace(/\*(.+?)\*/g, '<em>$1</em>')
+  text = text.replace(/`(.+?)`/g, '<code>$1</code>')
+  const lines = text.split('\n')
+  let html = '', inOl = false, inUl = false
+  lines.forEach(line => {
+    line = line.trim()
+    if (!line) {
+      if (inOl) { html += '</ol>'; inOl = false }
+      if (inUl) { html += '</ul>'; inUl = false }
+      return
+    }
+    if (line.startsWith('### ') || line.startsWith('## ') || line.startsWith('# ')) {
+      if (inOl) { html += '</ol>'; inOl = false }
+      if (inUl) { html += '</ul>'; inUl = false }
+      html += `<span class="section-title">${line.replace(/^#{1,3} /, '')}</span>`
+    } else if (/^\d+[\.\)]\s/.test(line)) {
+      if (inUl) { html += '</ul>'; inUl = false }
+      if (!inOl) { html += '<ol>'; inOl = true }
+      html += `<li>${line.replace(/^\d+[\.\)]\s/, '')}</li>`
+    } else if (line.startsWith('- ') || line.startsWith('• ') || line.startsWith('* ')) {
+      if (inOl) { html += '</ol>'; inOl = false }
+      if (!inUl) { html += '<ul>'; inUl = true }
+      html += `<li>${line.replace(/^[-•*]\s/, '')}</li>`
+    } else if (/^(definition|def|meaning|summary|in summary|conclusion)[:–]/i.test(line)) {
+      if (inOl) { html += '</ol>'; inOl = false }
+      if (inUl) { html += '</ul>'; inUl = false }
+      html += `<div class="def-box">${line}</div>`
+    } else if (/^(📝|✅|💡|🔑|summary|key takeaway)/i.test(line)) {
+      if (inOl) { html += '</ol>'; inOl = false }
+      if (inUl) { html += '</ul>'; inUl = false }
+      html += `<div class="summary-box">${line}</div>`
+    } else {
+      if (inOl) { html += '</ol>'; inOl = false }
+      if (inUl) { html += '</ul>'; inUl = false }
+      html += `<p>${line}</p>`
+    }
+  })
+  if (inOl) html += '</ol>'
+  if (inUl) html += '</ul>'
+  return html
+}
+
+function getTime() {
+  return new Date().toLocaleString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', hour12:true })
+}
+
+function shortTime(dt) {
+  const d = new Date(dt)
+  return d.toLocaleString('en-IN', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit', hour12:true })
+}
+
+// ── Sidebar ──
+function renderSidebar() {
+  const list = document.getElementById('session-list')
+  const ids = Object.keys(sessions).reverse()
+  if (ids.length === 0) {
+    list.innerHTML = `<div class="empty-sidebar"><span>💬</span>No chats yet.<br>Start a new conversation!</div>`
+    return
+  }
+  list.innerHTML = ids.map(id => {
+    const s = sessions[id]
+    const active = id === currentSessionId ? 'active' : ''
+    return `
+      <div class="session-item ${active}" onclick="loadSession('${id}')">
+        <div class="session-icon">${active ? '💬' : '🗨️'}</div>
+        <div class="session-info">
+          <div class="session-title">${s.title}</div>
+          <div class="session-time">${shortTime(s.time)}</div>
+        </div>
+        <button class="session-delete" onclick="event.stopPropagation(); deleteSession('${id}')" title="Delete">✕</button>
+      </div>`
+  }).join('')
+}
+
+// ── Load session into chat ──
+function loadSession(id) {
+  currentSessionId = id
+  const s = sessions[id]
+  document.getElementById('top-title').textContent = s.title
+  const box = document.getElementById('chat-box')
+  box.innerHTML = ''
+  s.messages.forEach(m => {
+    appendMsgToDom(m.who, m.text, m.time, m.type)
+  })
+  renderSidebar()
+}
+
+// ── New chat ──
+function newChat() {
+  currentSessionId = 'session_' + Date.now()
+  document.getElementById('top-title').textContent = 'New Chat'
+  document.getElementById('chat-box').innerHTML = `
+    <div class="welcome" id="welcome">
+      <div class="welcome-icon">🎓</div>
+      <h2>Welcome to EduBot</h2>
+      <p>Your smart education assistant. Ask me anything about academics.</p>
+      <div class="chips">
+        <span class="chip" onclick="ask('What is photosynthesis?')">What is photosynthesis?</span>
+        <span class="chip" onclick="ask('Explain the Pythagorean theorem')">Pythagorean theorem</span>
+        <span class="chip" onclick="ask('What caused World War 2?')">World War 2</span>
+        <span class="chip" onclick="ask('How does the water cycle work?')">Water cycle</span>
+        <span class="chip" onclick="ask('What is Newton\\'s first law?')">Newton's first law</span>
+      </div>
+    </div>`
+  renderSidebar()
+  document.getElementById('user-input').focus()
+}
+
+// ── Delete session ──
+async function deleteSession(id) {
+  await fetch('/clear_session', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ session_id: id }) })
+  delete sessions[id]
+  if (currentSessionId === id) newChat()
+  else renderSidebar()
+}
+
+// ── Clear all ──
+async function clearAll() {
+  if (!confirm('Clear all chat history?')) return
+  await fetch('/clear_all', { method:'POST' })
+  sessions = {}
+  newChat()
+}
+
+// ── Append message to DOM ──
+function removeWelcome() {
+  const w = document.getElementById('welcome')
+  if (w) w.remove()
+}
+
+function appendMsgToDom(who, text, time, type) {
+  removeWelcome()
+  const box = document.getElementById('chat-box')
+  const row = document.createElement('div')
+  row.className = `msg-row ${who === 'user' ? 'user' : ''}`
+  const av = who === 'user'
+    ? `<div class="avatar user-av">You</div>`
+    : `<div class="avatar bot-av">🎓</div>`
+  const bc = who === 'user' ? 'user-bubble' : (type === 'error' ? 'error-bubble' : 'bot-bubble')
+  const content = who === 'user' ? text : formatOutput(text)
+  row.innerHTML = `${av}<div class="msg-content"><div class="bubble ${bc}">${content}</div><span class="ts">${time}</span></div>`
+  box.appendChild(row)
+  box.scrollTop = box.scrollHeight
+}
+
+// ── Send message ──
+async function sendMessage() {
+  const input = document.getElementById('user-input')
+  const btn = document.getElementById('send-btn')
+  const msg = input.value.trim()
+  if (!msg) return
+
+  const time = getTime()
+
+  // Init session
+  if (!sessions[currentSessionId]) {
+    sessions[currentSessionId] = { title: msg.slice(0, 36) + (msg.length > 36 ? '…' : ''), time: new Date().toISOString(), messages: [] }
+    document.getElementById('top-title').textContent = sessions[currentSessionId].title
+  }
+
+  sessions[currentSessionId].messages.push({ who:'user', text:msg, time, type:'success' })
+  appendMsgToDom('user', msg, time, 'success')
+  input.value = ''
+  btn.disabled = true
+  renderSidebar()
+
+  // Typing
+  const box = document.getElementById('chat-box')
+  const tr = document.createElement('div')
+  tr.className = 'typing-row'; tr.id = 'typing'
+  tr.innerHTML = `<div class="avatar bot-av">🎓</div><div class="typing-bubble"><span></span><span></span><span></span></div>`
+  box.appendChild(tr); box.scrollTop = box.scrollHeight
+
+  const res = await fetch('/chat', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ message: msg, session_id: currentSessionId })
+  })
+  const data = await res.json()
+  document.getElementById('typing').remove()
+
+  sessions[currentSessionId].messages.push({ who:'bot', text:data.reply, time, type:data.type })
+  appendMsgToDom('bot', data.reply, time, data.type)
+  btn.disabled = false
+  input.focus()
+}
+
+function ask(q) {
+  document.getElementById('user-input').value = q
+  sendMessage()
+}
+
+// ── Load history on startup ──
+window.onload = async function() {
+  const res = await fetch('/history')
+  allHistory = await res.json()
+
+  // Group by session_id
+  allHistory.forEach(item => {
+    const sid = item.session_id || 'default'
+    if (!sessions[sid]) {
+      sessions[sid] = { title: item.user.slice(0,36) + (item.user.length > 36 ? '…' : ''), time: item.datetime, messages: [] }
+    }
+    sessions[sid].messages.push({ who:'user', text:item.user, time:item.datetime, type:'success' })
+    sessions[sid].messages.push({ who:'bot', text:item.bot, time:item.datetime, type:item.type })
+  })
+
+  renderSidebar()
+
+  // Load most recent session if exists
+  const ids = Object.keys(sessions)
+  if (ids.length > 0) {
+    loadSession(ids[ids.length - 1])
+  }
+}
+</script>
+</body>
+</html>
